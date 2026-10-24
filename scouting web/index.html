@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScoutTalent FC - Scouting Deportivo</title>
+  
+  <!-- CONEXIÓN AL ARCHIVO CSS -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- HEADER / NAVEGACIÓN -->
+  <header>
+    <div class="header-container">
+      <div class="logo" onclick="switchTab('feed')">
+        <div class="logo-badge">⚽</div>
+        <div class="logo-text">SCOUT<span>TALENT</span></div>
+      </div>
+
+      <nav>
+        <button id="nav-feed" class="active" onclick="switchTab('feed')">Highlights</button>
+        <button id="nav-directory" onclick="switchTab('directory')">Directorio</button>
+        <button id="nav-chat" onclick="switchTab('chat')">Mensajes</button>
+        <button id="nav-contact" onclick="switchTab('contact')">Contáctanos</button>
+        <button id="nav-profile" onclick="switchTab('profile')">Mi Perfil</button>
+      </nav>
+
+      <div class="user-selector">
+        <img id="header-avatar" src="" class="avatar-img" alt="Avatar">
+        <select id="user-role-select" onchange="setActiveUser(this.value)">
+          <option value="dep1">Mateo Gómez (Jugador)</option>
+          <option value="scout1">Carlos Mendoza (Scout)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main>
+
+    <!-- VISTA 1: FEED HIGHLIGHTS -->
+    <section id="view-feed">
+      <div class="grid-main">
+        <div>
+          <!-- FORMULARIO DE DEPORTISTA (PUBLICAR VIDEO) -->
+          <div id="post-creation-card" class="card">
+            <div class="card-header">
+              <img id="post-author-img" src="" class="avatar-img">
+              <div>
+                <h3 style="font-size:0.95rem; font-weight:700;">Publicar un nuevo Highlight</h3>
+                <p style="font-size:0.8rem; color:#94a3b8;">Muestra tus mejores jugadas en video</p>
+              </div>
+            </div>
+
+            <form onsubmit="handleCreatePost(event)">
+              <input type="text" id="post-title" required placeholder="Título del video (ej. Goles y asistencias)">
+              <input type="url" id="post-video-url" required placeholder="Enlace de YouTube Embed (ej. https://www.youtube.com/embed/S3KjmRxRAOc?start=937)">
+              <textarea id="post-desc" rows="2" placeholder="Describe los minutos clave o la jugada..."></textarea>
+              <div style="text-align: right;">
+                <button type="submit" class="btn-primary">Publicar Video</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- FORMULARIO DE SCOUT (EVALUAR Y PUBLICAR FOTO) -->
+          <div id="scout-tools-card" class="card hidden">
+            <div class="tab-pills">
+              <button class="tab-pill active" onclick="switchScoutTool('eval')">📝 Evaluar Jugador</button>
+              <button class="tab-pill" onclick="switchScoutTool('photo')">📸 Publicar Foto de Campo</button>
+            </div>
+
+            <div id="scout-tool-eval">
+              <h3 style="font-size:0.9rem; margin-bottom:8px; color:#38bdf8;">Crear Informe de Scouting</h3>
+              <form onsubmit="handleCreateEvaluation(event)">
+                <select id="eval-target-player" required>
+                  <option value="">-- Selecciona el jugador a evaluar --</option>
+                </select>
+                <div style="display:flex; gap:10px;">
+                  <input type="text" id="eval-pros" placeholder="Puntos Fuertes (ej. Buena velocidad)" required>
+                  <input type="text" id="eval-cons" placeholder="Aspectos a Mejorar (ej. Pierna zurda)" required>
+                </div>
+                <textarea id="eval-notes" rows="2" placeholder="Comentarios generales del ojeador..."></textarea>
+                <div style="text-align: right;">
+                  <button type="submit" class="btn-primary" style="background-color:#0284c7; color:#fff;">Guardar Informe</button>
+                </div>
+              </form>
+            </div>
+
+            <div id="scout-tool-photo" class="hidden">
+              <h3 style="font-size:0.9rem; margin-bottom:8px; color:#38bdf8;">Subir Galería/Foto de Visorías</h3>
+              <form onsubmit="handleCreatePhotoPost(event)">
+                <input type="text" id="photo-title" required placeholder="Título de la publicación (ej. Visorías en Cali Sub-20)">
+                <input type="url" id="photo-url" required placeholder="URL de la Foto (ej. https://images.unsplash.com/photo-...)">
+                <textarea id="photo-desc" rows="2" placeholder="Descripción del evento o visoría..."></textarea>
+                <div style="text-align: right;">
+                  <button type="submit" class="btn-primary" style="background-color:#0284c7; color:#fff;">Publicar Foto</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Feed dinámico -->
+          <div id="feed-container"></div>
+        </div>
+
+        <!-- Columna lateral -->
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <img id="side-user-avatar" src="" class="avatar-img" style="width:50px; height:50px;">
+              <div>
+                <h4 id="side-user-name">...</h4>
+                <p id="side-user-role" style="color:#10b981; font-size:0.8rem;">...</p>
+                <p id="side-user-pos" style="color:#94a3b8; font-size:0.75rem;">...</p>
+              </div>
+            </div>
+            <p id="side-user-bio" style="font-size:0.8rem; color:#cbd5e1; font-style:italic;">...</p>
+          </div>
+
+          <div class="card">
+            <h4 style="font-size:0.85rem; color:#94a3b8; margin-bottom:10px;">FILTRAR POR POSICIÓN</h4>
+            <div class="filter-group">
+              <button onclick="filterFeedByPos('ALL')" class="btn-secondary">Todos</button>
+              <button onclick="filterFeedByPos('Delantero')" class="btn-secondary">Delanteros</button>
+              <button onclick="filterFeedByPos('Centrocampista')" class="btn-secondary">Mediocampistas</button>
+              <button onclick="filterFeedByPos('Defensa')" class="btn-secondary">Defensas</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISTA 2: DIRECTORIO DE USUARIOS -->
+    <section id="view-directory" class="hidden">
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center; gap:16px;">
+        <div>
+          <h2 style="font-size:1.2rem;">Directorio General</h2>
+          <p style="font-size:0.8rem; color:#94a3b8;">Encuentra deportistas y ojeadores registrados</p>
+        </div>
+        <input type="text" id="search-athlete" oninput="renderDirectory()" placeholder="Buscar personas..." style="max-width:250px; margin:0;">
+      </div>
+      <div id="athletes-grid" class="directory-grid"></div>
+    </section>
+
+    <!-- VISTA 3: CHAT PRIVADO -->
+    <section id="view-chat" class="hidden">
+      <div class="chat-wrapper">
+        <div class="chat-sidebar">
+          <div style="padding:12px; border-bottom:1px solid #1e293b; font-weight:bold; font-size:0.85rem;">Conversaciones</div>
+          <div id="chat-list"></div>
+        </div>
+        <div class="chat-main">
+          <div style="padding:12px; border-bottom:1px solid #1e293b; background:#0f172a;" id="chat-target-name">Selecciona un contacto</div>
+          <div id="chat-messages-container" class="chat-messages"></div>
+          <form id="chat-form" onsubmit="handleSendMessage(event)" style="display:flex; gap:8px; padding:12px; background:#020617; border-top:1px solid #1e293b;">
+            <input type="text" id="chat-input-text" placeholder="Escribe un mensaje privado..." required style="margin:0;">
+            <button type="submit" id="chat-send-btn" class="btn-primary">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- VISTA 4: CONTÁCTANOS -->
+    <section id="view-contact" class="hidden">
+      <div class="card" style="max-width:550px; margin:0 auto;">
+        <h2 style="margin-bottom:8px;">Centro de Soporte y Ayuda</h2>
+        <p style="font-size:0.85rem; color:#94a3b8; margin-bottom:16px;">¿Tienes algún problema con tu cuenta o encontraste un fallo en la página? Escríbenos.</p>
+        
+        <form onsubmit="handleSendSupportTicket(event)">
+          <label style="font-size:0.8rem; color:#94a3b8;">Tu Nombre</label>
+          <input type="text" id="support-name" required placeholder="Tu nombre completo">
+          
+          <label style="font-size:0.8rem; color:#94a3b8;">Correo Electrónico</label>
+          <input type="email" id="support-email" required placeholder="correo@ejemplo.com">
+          
+          <label style="font-size:0.8rem; color:#94a3b8;">Asunto del Mensaje</label>
+          <select id="support-subject" required>
+            <option value="Técnico">Tengo un problema técnico en la página</option>
+            <option value="Cuenta">Problema con mi perfil / rol</option>
+            <option value="Reporte">Reportar a un usuario o mensaje inapropiado</option>
+            <option value="Sugerencia">Sugerencia para mejorar la plataforma</option>
+          </select>
+
+          <label style="font-size:0.8rem; color:#94a3b8;">Mensaje / Detalle</label>
+          <textarea id="support-msg" rows="4" required placeholder="Explícanos tu problema con detalle..."></textarea>
+
+          <button type="submit" class="btn-primary" style="width:100%;">Enviar Mensaje a Soporte</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- VISTA 5: PERFIL -->
+    <section id="view-profile" class="hidden">
+      <div class="card" style="max-width:600px; margin:0 auto;">
+        <h2 style="margin-bottom:16px;">Editar Perfil y Bibliografía</h2>
+        <form onsubmit="handleSaveProfile(event)">
+          <label style="font-size:0.8rem; color:#94a3b8;">URL de Foto de Perfil</label>
+          <input type="url" id="edit-avatar-url" required>
+          
+          <label style="font-size:0.8rem; color:#94a3b8;">Nombre Completo</label>
+          <input type="text" id="edit-name" required>
+          
+          <label style="font-size:0.8rem; color:#94a3b8;">Posición / Especialidad</label>
+          <input type="text" id="edit-position" required>
+          
+          <label style="font-size:0.8rem; color:#94a3b8;">Bibliografía / Trayectoria</label>
+          <textarea id="edit-bio" rows="4"></textarea>
+          
+          <button type="submit" class="btn-primary" style="width:100%;">Guardar Cambios</button>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- CONEXIÓN AL ARCHIVO JAVASCRIPT -->
+  <script src="script.js"></script>
+</body>
+</html>
